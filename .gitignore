@@ -1,6 +1,63 @@
+# ----------------------
+# Python
+# ----------------------
 __pycache__/
-*.pyc
-.env
-*.db
+*.py[cod]
+*$py.class
+
+# ----------------------
+# Virtual Environments
+# ----------------------
+.venv/
 venv/
+env/
+
+# ----------------------
+# Environment variables
+# ----------------------
+.env
+.env.*
+
+# Keep example env file
+!.env.example
+
+# ----------------------
+# uv
+# ----------------------
+# DO NOT ignore uv.lock
+# uv.lock should be committed
+
+# ----------------------
+# Logs
+# ----------------------
+*.log
+
+# ----------------------
+# Database
+# ----------------------
+*.sqlite3
+*.db
+
+# ----------------------
+# OS files
+# ----------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------
+# IDE
+# ----------------------
+.vscode/
 .idea/
+
+# ----------------------
+# Testing
+# ----------------------
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ----------------------
+# Docker
+# ----------------------
+docker-compose.override.yml
