@@ -1,24 +1,17 @@
 from fastapi import APIRouter, status
-from pydantic import BaseModel
-from typing import Optional, List
+from typing import List
+from datetime import datetime
+
+from app.schemas.task import (
+    TaskCreate,
+    TaskUpdate,
+    TaskResponse
+)
 
 router = APIRouter()
 
 
-class TaskCreate(BaseModel):
-    project_id: str
-    title: str
-    description: str
-    status: str
-
-
-class TaskUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
-
-
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=TaskResponse)
 def create_task(payload: TaskCreate):
     return {
         "id": "task-456",
@@ -26,12 +19,12 @@ def create_task(payload: TaskCreate):
         "title": payload.title,
         "description": payload.description,
         "status": payload.status,
-        "created_at": "2026-02-13T12:00:00Z",
-        "updated_at": "2026-02-13T12:00:00Z"
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
     }
 
 
-@router.get("/", response_model=List[dict])
+@router.get("/", response_model=List[TaskResponse])
 def list_tasks():
     return [
         {
@@ -40,18 +33,22 @@ def list_tasks():
             "title": "Setup backend",
             "description": "Initial placeholder task",
             "status": "ACTIVE",
-            "created_at": "2026-02-13T12:00:00Z",
-            "updated_at": "2026-02-13T12:00:00Z"
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
         }
     ]
 
 
-@router.patch("/{task_id}")
+@router.patch("/{task_id}", response_model=TaskResponse)
 def update_task(task_id: str, payload: TaskUpdate):
     return {
         "id": task_id,
-        "updated_fields": payload.dict(exclude_none=True),
-        "updated_at": "2026-02-13T13:00:00Z"
+        "project_id": "proj-123",
+        "title": payload.title or "Updated title",
+        "description": payload.description or "Updated description",
+        "status": payload.status or "ACTIVE",
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
     }
 
 
