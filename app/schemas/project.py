@@ -3,13 +3,19 @@ from typing import Optional
 from datetime import datetime
 
 
-class ProjectCreate(BaseModel):
+class ProjectBase(BaseModel):
     name: str
-    description: str
+    description: Optional[str] = None
 
 
-class ProjectResponse(BaseModel):
+class ProjectCreate(ProjectBase):
+    pass
+
+
+class ProjectResponse(ProjectBase):
     id: str
-    name: str
-    description: str
+    owner_id: str
     created_at: datetime
+
+    class Config:
+        from_attributes = True
