@@ -8,7 +8,7 @@ from app.schemas.auth import (
     TokenResponse
 )
 from app.core.dependencies import get_db
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password, create_access_token
 from app.models.user import User
 
 router = APIRouter()
@@ -44,9 +44,28 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
 
 
 
+
+
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest):
+def login(payload: LoginRequest, db: Session = Depends(get_db)):
+
+    user = db.query(User).filter(User.email == payload.email).first()
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if not verify_password(payload.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    access_token = create_access_token(
+        data={
+            "sub": user.id,
+            "role": user.role
+        }
+    )
+
     return {
-        "access_token": "fake-jwt-token",
+        "access_token": access_token,
         "token_type": "bearer"
     }
+
