@@ -3,6 +3,9 @@ from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
 from app.core.config import settings
+from fastapi.security import HTTPBearer
+
+security = HTTPBearer()
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
