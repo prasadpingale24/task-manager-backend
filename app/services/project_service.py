@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.project import Project
-from app.schemas.project import ProjectCreate
+from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.models.user import User
 
 
@@ -51,3 +51,56 @@ def get_project_by_id(
         raise PermissionError("Not allowed to access this project")
 
     return project
+
+
+def update_project_service(
+    db: Session,
+    project_id: str,
+    project_in: ProjectUpdate,
+    current_user: User,
+):
+    project = (
+        db.query(Project)
+        .filter(Project.id == project_id)
+        .first()
+    )
+
+    if not project:
+        return None
+
+    if project.owner_id != current_user.id:
+        raise PermissionError("Not allowed to update this project")
+
+    if project_in.name is not None:
+        project.name = project_in.name
+
+    if project_in.description is not None:
+        project.description = project_in.description
+
+    db.commit()
+    db.refresh(project)
+
+    return project
+
+
+def delete_project_service(
+    db: Session,
+    project_id: str,
+    current_user: User,
+):
+    project = (
+        db.query(Project)
+        .filter(Project.id == project_id)
+        .first()
+    )
+
+    if not project:
+        return None
+
+    if project.owner_id != current_user.id:
+        raise PermissionError("Not allowed to delete this project")
+
+    db.delete(project)
+    db.commit()
+
+    return True
