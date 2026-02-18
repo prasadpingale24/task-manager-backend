@@ -9,6 +9,7 @@ from app.db.session import engine
 import app.models.user
 import app.models.project
 import app.models.task
+import app.models.project_member
 
 Base.metadata.create_all(bind=engine)
 
