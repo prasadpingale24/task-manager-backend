@@ -2,9 +2,21 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from typing import List
 from datetime import datetime
 
-from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.core.dependencies import get_current_user
 from app.models.user import User
+from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.schemas.project_member import (
+    ProjectMemberAdd,
+    ProjectMemberResponse,
+    ProjectMemberListResponse,
+)
+
+from app.services.project_member_service import (
+    add_member_to_project,
+    list_project_members,
+    remove_member_from_project,
+)
+from app.services.project_access_service import check_project_access
 
 from app.services.project_service import (
     create_project_service,
@@ -13,6 +25,7 @@ from app.services.project_service import (
     update_project_service,
     delete_project_service
 )
+
 from app.db.session import get_db
 from sqlalchemy.orm import Session
 
@@ -118,3 +131,77 @@ def delete_project(
         )
 
     return None
+
+@router.get("/{project_id}/members", response_model=list[ProjectMemberListResponse])
+def get_project_members(
+    project_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    access = check_project_access(db, project_id, current_user)
+
+    if access is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    if access is False:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    return list_project_members(db, project_id)
+
+@router.post(
+    "/{project_id}/members",
+    status_code=201,
+    response_model=ProjectMemberResponse,
+)
+def add_project_member(
+    project_id: str,
+    payload: ProjectMemberAdd,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        result = add_member_to_project(
+            db,
+            project_id,
+            payload.user_id,
+            current_user,
+        )
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    if result == "USER_NOT_FOUND":
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if result == "ALREADY_MEMBER":
+        raise HTTPException(status_code=400, detail="User already member")
+
+    return result
+
+@router.delete("/{project_id}/members/{user_id}", status_code=204)
+def delete_project_member(
+    project_id: str,
+    user_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        result = remove_member_from_project(
+            db,
+            project_id,
+            user_id,
+            current_user,
+        )
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    if result is False:
+        raise HTTPException(status_code=404, detail="Membership not found")
+
+    return None
+

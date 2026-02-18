@@ -21,13 +21,12 @@ tags:
   - name: Tasks
 
 paths:
-
   /health:
     get:
       tags: [Health]
       summary: Health check endpoint
       responses:
-        '200':
+        "200":
           description: Service healthy
           content:
             application/json:
@@ -47,22 +46,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              $ref: "#/components/schemas/RegisterRequest"
             example:
               full_name: "Aarav Mehta"
               email: "aarav.mehta@company.com"
               password: "StrongPassword@123"
               role: "MANAGER"
       responses:
-        '201':
+        "201":
           description: User registered successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '400':
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
           description: Validation error
-        '409':
+        "409":
           description: Email already exists
 
   /auth/login:
@@ -74,18 +73,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
             example:
               email: "aarav.mehta@company.com"
               password: "StrongPassword@123"
       responses:
-        '200':
+        "200":
           description: Successful login
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '401':
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
           description: Invalid credentials
 
   /projects:
@@ -99,20 +98,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProjectCreateRequest'
+              $ref: "#/components/schemas/ProjectCreateRequest"
             example:
               name: "Internal CRM System"
               description: "CRM system for managing internal client workflows"
       responses:
-        '201':
+        "201":
           description: Project created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProjectResponse'
-        '401':
+                $ref: "#/components/schemas/ProjectResponse"
+        "401":
           description: Unauthorized
-        '403':
+        "403":
           description: Forbidden (Only managers allowed)
 
     get:
@@ -121,16 +120,108 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of projects
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ProjectResponse'
-        '401':
+                  $ref: "#/components/schemas/ProjectResponse"
+        "401":
           description: Unauthorized
+
+  /projects/{project_id}/members:
+    get:
+      tags:
+        - Projects
+      summary: List project members
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of project members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectMemberListResponse'
+
+        "401":
+          description: Not authorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Project not found
+
+  /projects/{project_id}/members:
+    post:
+      tags:
+        - Projects
+      summary: Add member to project
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectMemberAdd"
+            example:
+              user_id: "user_abc123"
+
+      responses:
+        "201":
+          description: Member added successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectMemberResponse"
+        "401":
+          description: Not authorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Project or user not found
+
+  /projects/{project_id}/members/{user_id}:
+    delete:
+      tags:
+        - Projects
+      summary: Remove member from project
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Member removed successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Not found
 
   /projects/{project_id}/tasks:
     post:
@@ -149,26 +240,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TaskCreateRequest'
+              $ref: "#/components/schemas/TaskCreateRequest"
             example:
               title: "Design database schema"
               description: "Create normalized schema with relationships"
               status: "ACTIVE"
               assigned_to: 5
       responses:
-        '201':
+        "201":
           description: Task created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskResponse'
-        '400':
+                $ref: "#/components/schemas/TaskResponse"
+        "400":
           description: Invalid input
-        '401':
+        "401":
           description: Unauthorized
-        '403':
+        "403":
           description: Forbidden
-        '404':
+        "404":
           description: Project not found
 
   /tasks:
@@ -188,15 +279,15 @@ paths:
             type: string
             enum: [ACTIVE, PENDING, COMPLETE]
       responses:
-        '200':
+        "200":
           description: List of tasks
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TaskResponse'
-        '401':
+                  $ref: "#/components/schemas/TaskResponse"
+        "401":
           description: Unauthorized
 
   /tasks/{task_id}:
@@ -212,15 +303,15 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Task details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskResponse'
-        '401':
+                $ref: "#/components/schemas/TaskResponse"
+        "401":
           description: Unauthorized
-        '404':
+        "404":
           description: Task not found
 
     put:
@@ -239,23 +330,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TaskUpdateRequest'
+              $ref: "#/components/schemas/TaskUpdateRequest"
             example:
               title: "Design optimized DB schema"
               description: "Add indexing strategy"
               status: "PENDING"
       responses:
-        '200':
+        "200":
           description: Task updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskResponse'
-        '401':
+                $ref: "#/components/schemas/TaskResponse"
+        "401":
           description: Unauthorized
-        '403':
+        "403":
           description: Forbidden
-        '404':
+        "404":
           description: Task not found
 
     delete:
@@ -270,17 +361,16 @@ paths:
           schema:
             type: integer
       responses:
-        '204':
+        "204":
           description: Task moved to trash
-        '401':
+        "401":
           description: Unauthorized
-        '403':
+        "403":
           description: Forbidden
-        '404':
+        "404":
           description: Task not found
 
 components:
-
   securitySchemes:
     bearerAuth:
       type: http
@@ -288,7 +378,6 @@ components:
       bearerFormat: JWT
 
   schemas:
-
     RegisterRequest:
       type: object
       required: [full_name, email, password, role]
@@ -323,7 +412,7 @@ components:
           type: string
           example: "bearer"
         user:
-          $ref: '#/components/schemas/UserResponse'
+          $ref: "#/components/schemas/UserResponse"
 
     UserResponse:
       type: object
@@ -359,6 +448,62 @@ components:
         created_by:
           type: integer
         created_at:
+          type: string
+          format: date-time
+
+    ProjectMemberUserInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "user_abc123"
+        email:
+          type: string
+          format: email
+          example: "member@example.com"
+      required:
+        - id
+        - email
+
+    ProjectMemberListResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "pm_789xyz"
+        project_id:
+          type: string
+          example: "proj_123abc"
+        joined_at:
+          type: string
+          format: date-time
+          example: "2026-02-18T12:34:56Z"
+        user:
+          $ref: '#/components/schemas/ProjectMemberUserInfo'
+      required:
+        - id
+        - project_id
+        - joined_at
+        - user
+
+    ProjectMemberAdd:
+      type: object
+      properties:
+        user_id:
+          type: string
+      required:
+        - user_id
+
+    ProjectMemberResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        project_id:
+          type: string
+        user_id:
+          type: string
+        joined_at:
           type: string
           format: date-time
 
