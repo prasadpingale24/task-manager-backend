@@ -4,6 +4,7 @@ from datetime import datetime
 class ProjectMemberUserInfo(BaseModel):
     id: str
     email: str
+    full_name: str
 
     class Config:
         from_attributes = True
