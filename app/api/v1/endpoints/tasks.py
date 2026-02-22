@@ -15,7 +15,7 @@ from app.services.task_service import TaskService
 router = APIRouter()
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=TaskResponse)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=TaskResponse)
 async def create_task(
     payload: TaskCreate,
     db: AsyncSession = Depends(get_db),
@@ -29,7 +29,7 @@ async def create_task(
     return task
 
 
-@router.get("/", response_model=List[Union[TaskOwnerResponse, TaskResponse]])
+@router.get("", response_model=List[Union[TaskOwnerResponse, TaskResponse]])
 async def list_tasks(
     project_id: str,
     db: AsyncSession = Depends(get_db),
