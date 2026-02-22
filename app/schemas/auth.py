@@ -24,3 +24,14 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: EmailStr
+    full_name: str
+    role: str
+
+
+class MessageResponse(BaseModel):
+    message: str

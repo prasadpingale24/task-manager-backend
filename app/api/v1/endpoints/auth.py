@@ -5,9 +5,12 @@ from app.schemas.auth import (
     SignupRequest,
     SignupResponse,
     LoginRequest,
-    TokenResponse
+    TokenResponse,
+    UserResponse,
+    MessageResponse
 )
-from app.core.dependencies import get_db
+from app.core.dependencies import get_db, get_current_user
+from app.models.user import User
 from app.services.auth_service import login_user_service, register_user_service
 
 router = APIRouter()
@@ -36,4 +39,20 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     return result
+
+@router.get("/me", response_model=UserResponse)
+async def get_me(current_user: User = Depends(get_current_user)):
+    """
+    Get current user profile.
+    """
+    return current_user
+
+@router.post("/logout", response_model=MessageResponse)
+async def logout(current_user: User = Depends(get_current_user)):
+    """
+    Logout current user.
+    """
+    # For stateless JWT, we primarily handle this on the frontend by deleting the token.
+    # This endpoint provides a semantic way for the frontend to acknowledge logout.
+    return {"message": "Successfully logged out"}
 
