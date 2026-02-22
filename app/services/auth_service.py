@@ -1,11 +1,13 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.models.user import User
 from app.schemas.auth import SignupRequest
 from app.core.security import hash_password, verify_password, create_access_token
 
 
-def register_user_service(db: Session, payload: SignupRequest):
-    existing_user = db.query(User).filter(User.email == payload.email).first()
+async def register_user_service(db: AsyncSession, payload: SignupRequest):
+    result = await db.execute(select(User).filter(User.email == payload.email))
+    existing_user = result.scalar_one_or_none()
 
     if existing_user:
         return "EMAIL_EXISTS"
@@ -18,14 +20,15 @@ def register_user_service(db: Session, payload: SignupRequest):
     )
 
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    await db.commit()
+    await db.refresh(new_user)
 
     return new_user
 
 
-def login_user_service(db: Session, email: str, password: str):
-    user = db.query(User).filter(User.email == email).first()
+async def login_user_service(db: AsyncSession, email: str, password: str):
+    result = await db.execute(select(User).filter(User.email == email))
+    user = result.scalar_one_or_none()
 
     if not user:
         return None

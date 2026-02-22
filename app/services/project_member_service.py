@@ -1,5 +1,7 @@
 from typing import List, Union
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+from sqlalchemy import select
 from app.models.project import Project
 from app.models.project_member import ProjectMember
 from app.models.user import User
@@ -10,15 +12,15 @@ from app.services.access_service import AccessService
 
 class ProjectMemberService:
     @classmethod
-    def add_member_to_project_service(
+    async def add_member_to_project_service(
         cls,
-        db: Session,
+        db: AsyncSession,
         project_id: str,
         user_id: str,
         current_user: User,
     ) -> Union[ProjectMember, str, None]:
         # Only owner can add members
-        access = AccessService.get_project_owner_access(db, project_id, current_user)
+        access = await AccessService.get_project_owner_access(db, project_id, current_user)
         
         if access is None:
             return None
@@ -26,24 +28,21 @@ class ProjectMemberService:
         if access is False:
             raise PermissionError("Only owner can add members")
 
-        # No longer preventing owner from being member
-        # if user_id == access.owner_id:
-        #     return "OWNER_CANNOT_BE_MEMBER"
-
         # Check user exists
-        user = db.query(User).filter(User.id == user_id).first()
+        result = await db.execute(select(User).filter(User.id == user_id))
+        user = result.scalar_one_or_none()
         if not user:
             return "USER_NOT_FOUND"
 
         # Prevent duplicate membership
-        existing = (
-            db.query(ProjectMember)
+        result = await db.execute(
+            select(ProjectMember)
             .filter(
                 ProjectMember.project_id == project_id,
                 ProjectMember.user_id == user_id,
             )
-            .first()
         )
+        existing = result.scalar_one_or_none()
 
         if existing:
             return "ALREADY_MEMBER"
@@ -56,20 +55,20 @@ class ProjectMemberService:
         )
 
         db.add(membership)
-        db.commit()
-        db.refresh(membership)
+        await db.commit()
+        await db.refresh(membership)
 
         return membership
 
     @classmethod
-    def list_project_members_service(
+    async def list_project_members_service(
         cls,
-        db: Session,
+        db: AsyncSession,
         project_id: str,
         current_user: User,
     ) -> List[ProjectMember]:
         # Check if user has access to view members
-        access = AccessService.get_project_with_access(db, project_id, current_user)
+        access = await AccessService.get_project_with_access(db, project_id, current_user)
         
         if access is None:
             return []
@@ -77,23 +76,23 @@ class ProjectMemberService:
         if access is False:
             raise PermissionError("Not allowed to view members")
 
-        return (
-            db.query(ProjectMember)
+        result = await db.execute(
+            select(ProjectMember)
             .options(joinedload(ProjectMember.user))
             .filter(ProjectMember.project_id == project_id)
-            .all()
         )
+        return result.scalars().all()
 
     @classmethod
-    def remove_member_from_project_service(
+    async def remove_member_from_project_service(
         cls,
-        db: Session,
+        db: AsyncSession,
         project_id: str,
         user_id: str,
         current_user: User,
     ) -> bool:
         # Only owner can remove members
-        access = AccessService.get_project_owner_access(db, project_id, current_user)
+        access = await AccessService.get_project_owner_access(db, project_id, current_user)
         
         if access is None:
             return None
@@ -101,19 +100,19 @@ class ProjectMemberService:
         if access is False:
             raise PermissionError("Only owner can remove members")
 
-        membership = (
-            db.query(ProjectMember)
+        result = await db.execute(
+            select(ProjectMember)
             .filter(
                 ProjectMember.project_id == project_id,
                 ProjectMember.user_id == user_id,
             )
-            .first()
         )
+        membership = result.scalar_one_or_none()
 
         if not membership:
             return False
 
-        db.delete(membership)
-        db.commit()
+        await db.delete(membership)
+        await db.commit()
 
         return True

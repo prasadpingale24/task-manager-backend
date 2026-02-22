@@ -1,26 +1,24 @@
-from app.db.session import SessionLocal
-from typing import Generator
+from app.db.session import AsyncSessionLocal
+from typing import AsyncGenerator
 
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from fastapi.security import HTTPAuthorizationCredentials
 from app.core.security import security
 from app.core.config import settings
 from app.models.user import User
 
 
-def get_db() -> Generator:
-    db = SessionLocal()
-    try:
+async def get_db() -> AsyncGenerator:
+    async with AsyncSessionLocal() as db:
         yield db
-    finally:
-        db.close()
 
 
-def get_current_user(
+async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ) -> User:
 
     credentials_exception = HTTPException(
@@ -44,7 +42,8 @@ def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == user_id).first()
+    result = await db.execute(select(User).filter(User.id == user_id))
+    user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception
 

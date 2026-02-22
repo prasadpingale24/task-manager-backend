@@ -1,9 +1,8 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 from typing import List, Union
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, get_db
 from app.models.user import User
-from app.db.session import get_db
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.task import (
     TaskCreate,
@@ -17,15 +16,12 @@ router = APIRouter()
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=TaskResponse)
-def create_task(
+async def create_task(
     payload: TaskCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        task = TaskService.create_task_service(db, payload, current_user)
-    except PermissionError as e:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    task = await TaskService.create_task_service(db, payload, current_user)
         
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
@@ -34,27 +30,21 @@ def create_task(
 
 
 @router.get("/", response_model=List[Union[TaskOwnerResponse, TaskResponse]])
-def list_tasks(
+async def list_tasks(
     project_id: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        return TaskService.get_project_tasks_service(db, project_id, current_user)
-    except PermissionError as e:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    return await TaskService.get_project_tasks_service(db, project_id, current_user)
 
 
 @router.get("/{task_id}", response_model=Union[TaskOwnerResponse, TaskResponse])
-def get_task(
+async def get_task(
     task_id: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        task = TaskService.get_task_by_id_service(db, task_id, current_user)
-    except PermissionError as e:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    task = await TaskService.get_task_by_id_service(db, task_id, current_user)
         
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
@@ -63,16 +53,13 @@ def get_task(
 
 
 @router.patch("/{task_id}", response_model=TaskResponse)
-def update_task(
+async def update_task(
     task_id: str,
     payload: TaskUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        task = TaskService.update_task_service(db, task_id, payload, current_user)
-    except PermissionError as e:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    task = await TaskService.update_task_service(db, task_id, payload, current_user)
         
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
@@ -81,15 +68,12 @@ def update_task(
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(
+async def delete_task(
     task_id: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        result = TaskService.delete_task_service(db, task_id, current_user)
-    except PermissionError as e:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    result = await TaskService.delete_task_service(db, task_id, current_user)
         
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
