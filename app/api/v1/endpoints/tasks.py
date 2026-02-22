@@ -1,62 +1,97 @@
-from fastapi import APIRouter, status, Depends
-from typing import List
-from datetime import datetime
+from fastapi import APIRouter, status, Depends, HTTPException
+from typing import List, Union
 from app.core.dependencies import get_current_user
 from app.models.user import User
+from app.db.session import get_db
+from sqlalchemy.orm import Session
 
 from app.schemas.task import (
     TaskCreate,
     TaskUpdate,
-    TaskResponse
+    TaskResponse,
+    TaskOwnerResponse
 )
+from app.services.task_service import TaskService
 
 router = APIRouter()
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=TaskResponse)
-def create_task(payload: TaskCreate, current_user: User = Depends(get_current_user)):
-    return {
-        "id": "task-456",
-        "project_id": payload.project_id,
-        "title": payload.title,
-        "description": payload.description,
-        "status": payload.status,
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
-    }
-
-
-@router.get("/", response_model=List[TaskResponse])
-def list_tasks(current_user: User = Depends(get_current_user)
+def create_task(
+    payload: TaskCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    return [
-        {
-            "id": "task-456",
-            "project_id": "proj-123",
-            "title": "Setup backend",
-            "description": "Initial placeholder task",
-            "status": "ACTIVE",
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
-        }
-    ]
+    try:
+        task = TaskService.create_task_service(db, payload, current_user)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+        
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        
+    return task
+
+
+@router.get("/", response_model=List[Union[TaskOwnerResponse, TaskResponse]])
+def list_tasks(
+    project_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        return TaskService.get_project_tasks_service(db, project_id, current_user)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+
+
+@router.get("/{task_id}", response_model=Union[TaskOwnerResponse, TaskResponse])
+def get_task(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        task = TaskService.get_task_by_id_service(db, task_id, current_user)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+        
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        
+    return task
 
 
 @router.patch("/{task_id}", response_model=TaskResponse)
-def update_task(task_id: str, payload: TaskUpdate, current_user: User = Depends(get_current_user)
+def update_task(
+    task_id: str,
+    payload: TaskUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    return {
-        "id": task_id,
-        "project_id": "proj-123",
-        "title": payload.title or "Updated title",
-        "description": payload.description or "Updated description",
-        "status": payload.status or "ACTIVE",
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
-    }
+    try:
+        task = TaskService.update_task_service(db, task_id, payload, current_user)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+        
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        
+    return task
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(task_id: str, current_user: User = Depends(get_current_user)
+def delete_task(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
+    try:
+        result = TaskService.delete_task_service(db, task_id, current_user)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+        
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        
     return None

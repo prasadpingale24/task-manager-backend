@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional, Literal
+from pydantic import BaseModel, ConfigDict
+from typing import Optional, Literal, List
 from datetime import datetime
 
 
@@ -19,8 +19,24 @@ class TaskUpdate(BaseModel):
 class TaskResponse(BaseModel):
     id: str
     project_id: str
+    created_by_id: str
     title: str
     description: str
     status: str
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MemberTaskStatus(BaseModel):
+    user_id: str
+    full_name: str
+    status: str
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TaskOwnerResponse(TaskResponse):
+    member_statuses: List[MemberTaskStatus] = []
