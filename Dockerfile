@@ -25,11 +25,7 @@ COPY . .
 # Set environment variables
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    DATABASE_URL="sqlite:///./data/tasks.db" \
     BACKEND_CORS_ORIGINS="[]"
-
-# Create data directory for SQLite persistence
-RUN mkdir -p /app/data
 
 # Expose port
 EXPOSE 8000
