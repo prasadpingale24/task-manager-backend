@@ -28,6 +28,12 @@ pipeline {
             }
         }
 
+        stage('Test') {
+            steps {
+                docker_test()
+            }
+        }
+
         stage('Push Image') {
             steps {
                 docker_push(IMAGE_NAME, IMAGE_TAG)
