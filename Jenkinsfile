@@ -1,65 +1,41 @@
-@Library("Shared") _
 pipeline {
     agent { label 'scott' }
 
+    environment {
+        DOCKER_USER = "prasadpingale24"
+        IMAGE_NAME = "task-manager-backend"
+    }
+
     stages {
 
-        stage("Hello"){
-            steps{
-                script{
-                    hello()
-                }
-            }
-        }
-        stage("Code") {
+        stage('Checkout') {
             steps {
-                script{
-                    clone("https://github.com/prasadpingale24/task-manager-backend.git", "main")
-                }
+                checkout scm
             }
         }
 
-        stage("Build") {
+        stage('Prepare Environment') {
             steps {
-                script{
-                    docker_build("task-manager-backend", "latest", "prasadpingale24")
-                }
+                prepareEnv()
             }
         }
 
-        stage("Test") {
+        stage('Build Image') {
             steps {
-                script {
-                    docker_test("task-manager-backend")
-                }
-            }
-            post {
-                always {
-                    echo "Cleaning up Postgres test container"
-                    sh 'docker rm -f pg_test || true'
-                    junit allowEmptyResults: true, testResults: 'results.xml'
-                }
-                failure {
-                    echo "Backend tests FAILED — check report"
-                }
+                buildImage(DOCKER_USER, IMAGE_NAME)
             }
         }
 
-         stage("Push to DockerHub") {
+        stage('Push Image') {
             steps {
-                script{
-                    docker_push("task-manager-backend", "latest")
-                }
-            }
-        }
-        
-        stage("Deploy") {
-            steps {
-                script{
-                    docker_deploy()
-                }
+                pushImage(DOCKER_USER, IMAGE_NAME)
             }
         }
 
+        stage('Deploy') {
+            steps {
+                deployBackend()
+            }
+        }
     }
 }
