@@ -82,7 +82,16 @@ pipeline {
 
         stage("Deploy") {
             steps {
-                echo "This is deploying the code"
+                echo "Deploying the application with Docker Compose"
+                // Using Docker Compose ensures the 'db' and 'backend' are in the same network
+                // Jenkins environment variables are automatically picked up by Docker Compose
+                sh """
+                    docker compose down --remove-orphans
+                    docker compose up -d
+                """
+                
+                echo "Waiting for backend to start..."
+                sh "sleep 10 && docker compose ps"
             }
         }
 
