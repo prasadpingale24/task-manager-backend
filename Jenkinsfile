@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_USER = "prasadpingale24"
         IMAGE_NAME = "task-manager-backend"
+        IMAGE_TAG = "latest"
     }
 
     stages {
@@ -22,19 +23,19 @@ pipeline {
 
         stage('Build Image') {
             steps {
-                buildImage(DOCKER_USER, IMAGE_NAME)
+                docker_build(DOCKER_USER, IMAGE_NAME, IMAGE_TAG)
             }
         }
 
         stage('Push Image') {
             steps {
-                pushImage(DOCKER_USER, IMAGE_NAME)
+                docker_push(IMAGE_NAME, IMAGE_TAG)
             }
         }
 
         stage('Deploy') {
             steps {
-                deployBackend()
+                docker_deploy()
             }
         }
     }
