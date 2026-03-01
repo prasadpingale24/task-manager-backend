@@ -5,11 +5,17 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
 WORKDIR /app
 
+ARG INSTALL_DEV=false
+
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=uv.lock,target=uv.lock \
-    uv sync --frozen --no-install-project --no-dev
+    if [ "$INSTALL_DEV" = "true" ]; then \
+        uv sync --frozen --no-install-project; \
+    else \
+        uv sync --frozen --no-install-project --no-dev; \
+    fi
 
 # Final image
 FROM python:3.13-slim-bookworm
