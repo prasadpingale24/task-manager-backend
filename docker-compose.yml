@@ -13,7 +13,7 @@ services:
 
   backend:
     build: .
-    image: task-manager-backend:latest
+    image: "prasadpingale24/task-manager-backend:latest"
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     environment:
