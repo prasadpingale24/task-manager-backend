@@ -86,8 +86,6 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'dockerHubCred', 
                                                passwordVariable: 'dockerHubPass', 
                                                usernameVariable: 'dockerHubUser')]) {
-                    // Use double quotes for Groovy interpolation or single quotes for shell interpolation.
-                    // Using single quotes + shell variables ($VAR) is generally safer for credentials.
                     sh 'echo "$dockerHubPass" | docker login -u "$dockerHubUser" --password-stdin'
                     sh "docker image tag task-manager-backend:latest ${dockerHubUser}/task-manager-backend:latest"
                     sh "docker push ${dockerHubUser}/task-manager-backend:latest"
