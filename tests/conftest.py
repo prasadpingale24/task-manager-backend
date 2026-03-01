@@ -1,76 +1,80 @@
 import asyncio
 import os
-from typing import AsyncGenerator, Generator
-
 import pytest
 import pytest_asyncio
+from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from urllib.parse import quote_plus
 
 from app.main import app
 from app.db.base import Base
 from app.core.dependencies import get_db
+from app.db import session as db_session
 
+# --- Windows Compatibility ---
+if os.name == 'nt':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-# Build a PostgreSQL test URL from environment variables (same pattern as app/core/config.py).
-# Falls back to localhost defaults for local development.
-_pg_user = os.getenv("POSTGRES_USER", "postgres")
-_pg_pass = os.getenv("POSTGRES_PASSWORD", "postgres")
-_pg_host = os.getenv("POSTGRES_HOST", "localhost")
-_pg_port = os.getenv("POSTGRES_PORT", "5432")
-_pg_db = os.getenv("POSTGRES_DB", "task_manager_test")
+# --- Configuration ---
 
-TEST_DATABASE_URL = f"postgresql+asyncpg://{_pg_user}:{_pg_pass}@{_pg_host}:{_pg_port}/{_pg_db}"
+def get_test_db_url():
+    user = os.getenv("POSTGRES_USER", "postgres")
+    password = quote_plus(os.getenv("POSTGRES_PASSWORD", "postgres"))
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    port = os.getenv("POSTGRES_PORT", "5432")
+    db = os.getenv("POSTGRES_DB", "task_manager_test")
+    return f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{db}"
 
-engine = create_async_engine(TEST_DATABASE_URL)
-
-TestingSessionLocal = async_sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
-
-
-@pytest.fixture(scope="session")
-def event_loop() -> Generator:
-    """Create an instance of the default event loop for each test case."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
+# --- Fixtures ---
 
 @pytest_asyncio.fixture
-async def db() -> AsyncGenerator[AsyncSession, None]:
-    """Provide a clean database session for each test.
+async def engine():
+    """Function-scoped engine to ensure loop consistency."""
+    engine = create_async_engine(get_test_db_url(), echo=False)
+    db_session.engine = engine
+    yield engine
+    await engine.dispose()
 
-    Creates all tables before the test, yields a session,
-    then drops all tables after the test for full isolation.
-    """
+@pytest_asyncio.fixture(autouse=True)
+async def setup_test_db(engine):
+    """Ensure tables exist for each test. Function-scoped for consistency."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    yield
+    # No drop_all here for speed, just rely on create_all being safe or recreate DB if needed
 
-    async with TestingSessionLocal() as session:
+@pytest_asyncio.fixture
+async def db(engine) -> AsyncGenerator[AsyncSession, None]:
+    """Function-scoped session with transactional rollback."""
+    async with engine.connect() as connection:
+        transaction = await connection.begin()
+        
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            autocommit=False,
+            autoflush=False,
+        )
+        
         yield session
+        
         await session.close()
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
+        await transaction.rollback()
 
 @pytest_asyncio.fixture
 async def client(db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    """Provide an AsyncClient that uses the test database."""
-    async def override_get_db():
+    """AsyncClient with DB dependency override."""
+    
+    async def _get_test_db():
         yield db
 
-    app.dependency_overrides[get_db] = override_get_db
-
+    app.dependency_overrides[get_db] = _get_test_db
+    
     async with AsyncClient(
-        transport=ASGITransport(app=app),
+        transport=ASGITransport(app=app), 
         base_url="http://test/api/v1"
     ) as ac:
         yield ac
-
+    
     app.dependency_overrides.clear()

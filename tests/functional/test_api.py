@@ -62,12 +62,12 @@ async def test_project_lifecycle_functional(client: AsyncClient):
     
     # 2. Create Project
     project_payload = {"name": "API Project", "description": "Created via API"}
-    create_response = await client.post("/projects/", json=project_payload, headers=headers)
+    create_response = await client.post("/projects", json=project_payload, headers=headers)
     assert create_response.status_code == 201
     project_id = create_response.json()["id"]
     
     # 3. List Projects
-    list_response = await client.get("/projects/", headers=headers)
+    list_response = await client.get("/projects", headers=headers)
     assert list_response.status_code == 200
     assert len(list_response.json()) >= 1
     
