@@ -6,20 +6,23 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.db.base import Base
 from app.core.dependencies import get_db
 
-# Use an in-memory SQLite database for testing.
-# By NOT using StaticPool, each connection will get its own private in-memory DB.
-TEST_DATABASE_URL = "sqlite+aiosqlite:///"
 
-engine = create_async_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-)
+# Build a PostgreSQL test URL from environment variables (same pattern as app/core/config.py).
+# Falls back to localhost defaults for local development.
+_pg_user = os.getenv("POSTGRES_USER", "postgres")
+_pg_pass = os.getenv("POSTGRES_PASSWORD", "postgres")
+_pg_host = os.getenv("POSTGRES_HOST", "localhost")
+_pg_port = os.getenv("POSTGRES_PORT", "5432")
+_pg_db = os.getenv("POSTGRES_DB", "task_manager_test")
+
+TEST_DATABASE_URL = f"postgresql+asyncpg://{_pg_user}:{_pg_pass}@{_pg_host}:{_pg_port}/{_pg_db}"
+
+engine = create_async_engine(TEST_DATABASE_URL)
 
 TestingSessionLocal = async_sessionmaker(
     autocommit=False,
@@ -40,33 +43,34 @@ def event_loop() -> Generator:
 
 @pytest_asyncio.fixture
 async def db() -> AsyncGenerator[AsyncSession, None]:
-    """Provide a clean database session for each test."""
-    async with engine.connect() as conn:
-        # Start a transaction for the entire test
-        async with conn.begin() as trans:
-            # Create tables in this specific connection
-            await conn.run_sync(Base.metadata.create_all)
-            
-            async with TestingSessionLocal(bind=conn) as session:
-                yield session
-                await session.close()
-            
-            # Rollback EVERYTHING (including the create_all)
-            await trans.rollback()
+    """Provide a clean database session for each test.
+
+    Creates all tables before the test, yields a session,
+    then drops all tables after the test for full isolation.
+    """
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    async with TestingSessionLocal() as session:
+        yield session
+        await session.close()
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest_asyncio.fixture
 async def client(db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Provide an AsyncClient that uses the test database."""
-    def override_get_db():
+    async def override_get_db():
         yield db
 
     app.dependency_overrides[get_db] = override_get_db
-    
+
     async with AsyncClient(
-        transport=ASGITransport(app=app), 
+        transport=ASGITransport(app=app),
         base_url="http://test/api/v1"
     ) as ac:
         yield ac
-    
+
     app.dependency_overrides.clear()
