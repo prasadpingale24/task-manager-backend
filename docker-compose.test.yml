@@ -7,7 +7,7 @@ services:
       POSTGRES_DB: task_manager_test
 
   backend:
-    image: prasadpingale24/task-manager-backend:latest
+    build: .
     depends_on:
       - db
     environment:
@@ -16,9 +16,10 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: task_manager_test
       SECRET_KEY: test-secret
+      PYTHONPATH: /app
     command: >
-      pytest tests/
-      --junitxml=results.xml
-      --cov=app
-      --cov-report=xml
-      -v
+      sh -c "pytest tests/
+             --junitxml=results.xml
+             --cov=app
+             --cov-report=xml
+             -v"
