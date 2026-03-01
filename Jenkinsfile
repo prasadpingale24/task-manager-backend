@@ -29,7 +29,7 @@ pipeline {
                         -e POSTGRES_USER=postgres \
                         -e POSTGRES_PASSWORD=postgres \
                         -e POSTGRES_DB=task_manager_test \
-                        -p 5433:5432 \
+                        -p 5444:5432 \
                         postgres:15-alpine
                 '''
 
