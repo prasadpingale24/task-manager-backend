@@ -22,15 +22,15 @@ pipeline {
             }
         }
 
-        stage('Build Image') {
-            steps {
-                docker_build(DOCKER_USER, IMAGE_NAME, IMAGE_TAG)
-            }
-        }
-
         stage('Test') {
             steps {
                 docker_test()
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                docker_build(DOCKER_USER, IMAGE_NAME, IMAGE_TAG)
             }
         }
 
