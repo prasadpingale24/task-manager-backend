@@ -65,5 +65,12 @@ pipeline {
                 docker_deploy()
             }
         }
+
+        stage('Health Check') {
+            steps {
+                // Using 72.60.78.85 as seen in CORS config
+                healthCheck(url: "http://72.60.78.85:8000/health", maxRetries: 12, retryInterval: 10)
+            }
+        }
     }
 }
