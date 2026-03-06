@@ -4,10 +4,10 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: task_manager_test
+      POSTGRES_DB: ${POSTGRES_DB:-task_manager_test}
       POSTGRES_HOST_AUTH_METHOD: trust
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d task_manager_test"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-task_manager_test}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
       POSTGRES_HOST: db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: task_manager_test
+      POSTGRES_DB: ${POSTGRES_DB:-task_manager_test}
       SECRET_KEY: test-secret
       PYTHONPATH: /app
     command: >
