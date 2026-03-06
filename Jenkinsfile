@@ -25,16 +25,16 @@ def projectConfig = [
 ]
 
 pipeline {
-    
+
     agent { label 'scott' }
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
+        // stage('Checkout') {
+        //     steps {
+        //         checkout scm
+        //     }
+        // }
 
         stage('Prepare Environment') {
             steps {
