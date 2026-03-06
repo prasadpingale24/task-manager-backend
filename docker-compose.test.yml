@@ -3,7 +3,7 @@ services:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: task_manager_test
       POSTGRES_HOST_AUTH_METHOD: trust
     healthcheck:
@@ -23,7 +23,7 @@ services:
     environment:
       POSTGRES_HOST: db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: task_manager_test
       SECRET_KEY: test-secret
       PYTHONPATH: /app
