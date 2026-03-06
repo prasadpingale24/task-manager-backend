@@ -25,6 +25,7 @@ def projectConfig = [
 ]
 
 pipeline {
+    
     agent { label 'scott' }
 
     stages {
