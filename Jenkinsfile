@@ -1,4 +1,25 @@
 @Library("Shared") _
+
+def projectConfig = [
+    projectName: 'Backend',
+    vars: [
+        'POSTGRES_USER': 'postgres',
+        'POSTGRES_DB': 'task_manager',
+        'POSTGRES_HOST': 'db',
+        'POSTGRES_PORT': '5432',
+        'ALGORITHM': 'HS256',
+        'ACCESS_TOKEN_EXPIRE_MINUTES': '1440',
+        'BACKEND_CORS_ORIGINS': '["http://localhost:3000", "http://72.60.78.85:3000"]',
+        'PROJECT_NAME': 'Team Tasks Manager',
+        'BACKEND_PORT': '8000',
+        'IMAGE_TAG': "${IMAGE_TAG}"
+    ],
+    secrets: [
+        [id: 'taskManagerBackendSecretKey', var: 'SECRET_KEY'],
+        [id: 'taskManagerBackendPassword', var: 'POSTGRES_PASSWORD']
+    ]
+]
+
 pipeline {
     agent { label 'scott' }
 
@@ -18,13 +39,13 @@ pipeline {
 
         stage('Prepare Environment') {
             steps {
-                prepareEnv()
+                prepareEnv(projectConfig)
             }
         }
 
         stage('Test') {
             steps {
-                docker_test()
+                docker_test('backend')
             }
         }
 
