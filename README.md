@@ -61,11 +61,13 @@ Detailed technical documentation: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 2. **Access the API**:
    The backend is exposed at [http://localhost:8000](http://localhost:8000).
 
-## 📖 API Documentation
+## 🌐 Live Demo & API Documentation
 
-Once the server is running, you can explore the interactive API documentation:
-- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+Explore the interactive API documentation and live endpoints:
+- **Swagger UI (Full Documentation)**: [http://72.60.78.85:8000/docs](http://72.60.78.85:8000/docs)
+- **Health Status**: [http://72.60.78.85:8000/health](http://72.60.78.85:8000/health)
+
+*Note: For local development, Swagger is available at `http://localhost:8000/docs`.*
 
 ## 🏗 System Architecture
 
@@ -89,9 +91,8 @@ The application follows a clean, layered architecture to ensure a strict separat
 - **SQLAlchemy Models**: Define the internal database schema, relationships, and constraints.
 
 ### 4. Persistence Layer
-- **Async Driver**: Uses `aiosqlite` for non-blocking I/O operations with the SQLite database.
+- **Async Driver**: Uses `asyncpg` for non-blocking I/O operations with the PostgreSQL database.
 - **Session Management**: Managed via an `AsyncSession` factory, ensuring efficient transaction handling.
-- **Data Persistence**: Dedicated `/data` volume for persistent storage in containerized environments.
 
 ## 📁 Project Structure
 
@@ -104,9 +105,12 @@ The application follows a clean, layered architecture to ensure a strict separat
 │   ├── schemas/      # Pydantic schemas (Request/Response)
 │   ├── services/     # Business logic layer
 │   └── main.py       # FastAPI application entry point
-├── data/             # Persistent SQLite database storage
+├── docs/             # Technical documentation & architecture
+├── tests/            # Pytest suite
 ├── Dockerfile        # uv-powered multi-stage build
-└── docker-compose.yml# Service orchestration
+├── docker-compose.yml# Production service orchestration
+├── docker-compose.test.yml # Test environment orchestration
+└── Jenkinsfile       # Automated CI/CD pipeline
 ```
 
 ## 🔄 Automated Deployment (CI/CD)
