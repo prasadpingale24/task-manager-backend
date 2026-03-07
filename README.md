@@ -69,7 +69,7 @@ Once the server is running, you can explore the interactive API documentation:
 
 ## 🏗 System Architecture
 
-![System Architecture](./docs/Task_Manager_Backend_System_Architecture.png)
+![System Architecture](./docs/Team_Task_Manager_System_Architecture.png)
 
 The application follows a clean, layered architecture to ensure a strict separation of concerns and maintainability.
 
