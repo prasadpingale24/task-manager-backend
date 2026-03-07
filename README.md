@@ -4,27 +4,31 @@ A high-performance, asynchronous REST API for managing team projects and tasks. 
 
 ## 🚀 Key Features
 
-- **Asynchronous Architecture**: Fully non-blocking database operations using `SQLAlchemy` 2.0 and `aiosqlite`.
+- **Asynchronous Architecture**: Fully non-blocking database operations using `SQLAlchemy` 2.0 and `asyncpg`.
 - **Centralized Error Handling**: Standardized API responses and global exception mapping (400/403/500).
 - **Proactive Persistence**: Automatic schema migrations and table creation on application startup.
 - **Robust Security**: JWT-based authentication with OAuth2 password flow.
 - **Docker-Ready**: Multi-stage Docker builds powered by `uv` for minimal image size and fast dependency resolution.
 - **Easy Orchestration**: `docker-compose` support with managed environment variables and volume persistence.
+- **CI/CD Integration**: Fully automated pipeline via Jenkins Shared Library.
 
 ## 🛠 Tech Stack
 
 - **Framework**: [FastAPI](https://fastapi.tiangolo.com/)
-- **Database**: SQLite (via `aiosqlite`)
+- **Database**: [PostgreSQL](https://www.postgresql.org/)
 - **ORM**: [SQLAlchemy 2.0](https://www.sqlalchemy.org/)
 - **Validation**: [Pydantic v2](https://docs.pydantic.dev/)
 - **Package Manager**: [uv](https://github.com/astral-sh/uv)
 - **Server**: Uvicorn
 
+## 🏠 System Architecture
+Detailed technical documentation: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
 ## 📋 Prerequisites
 
 - **Python**: 3.13+
 - **uv**: (Recommended) Installed on your machine.
-- **Docker**: (Optional) For containerized execution.
+- **Docker & Docker Compose**: To run the full stack.
 
 ## 🏃 Running the Application
 
@@ -105,10 +109,15 @@ The application follows a clean, layered architecture to ensure a strict separat
 └── docker-compose.yml# Service orchestration
 ```
 
-## 🔐 Configuration
+## 🔄 Automated Deployment (CI/CD)
 
-The application is environment-driven. Key variables available in `.env`:
-- `DATABASE_URL`: Location of the SQLite database.
-- `SECRET_KEY`: Used for JWT signing.
-- `BACKEND_CORS_ORIGINS`: Allowed frontend origins.
-- `BACKEND_PORT`: Host port mapping for Docker.
+The project includes a production-grade `Jenkinsfile` that automates the entire lifecycle:
+1. **Prepare Environment**: Generates a `.env` file from Jenkins credentials and validates for missing keys.
+2. **Test**: Runs the backend test suite using a dedicated `docker-compose.test.yml`.
+3. **Build & Push**: Builds a production-optimized Docker image and pushes it to Docker Hub.
+4. **Deploy**: Automatically deploys the new image to the production server.
+5. **Health Check**: Verifies the application is responding on the `/health` endpoint after deployment.
+
+---
+
+*Documentation last updated: March 2026*
