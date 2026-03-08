@@ -17,7 +17,7 @@ def projectConfig = [
         'PROJECT_NAME': 'Team Tasks Manager',
         'BACKEND_BIND_ADDR': '0.0.0.0',
         'BACKEND_PORT': '8000',
-        'IMAGE_TAG': "${IMAGE_TAG}"
+        'IMAGE_TAG': "${IMAGE_TAG}",
         'ENVIRONMENT': 'production'
     ],
     secrets: [
