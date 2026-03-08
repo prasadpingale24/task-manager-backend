@@ -56,7 +56,7 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
-
+trivy*
 # ----------------------
 # Docker
 # ----------------------

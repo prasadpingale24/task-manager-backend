@@ -16,10 +16,17 @@ from app.models.task import Task
 from app.models.user_task_status import UserTaskStatus
 
 
+from app.core.middleware import SecurityHeadersMiddleware
+
 app = FastAPI(
     title="Team Tasks Manager API",
-    openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
+    openapi_url=f"{settings.API_V1_PREFIX}/openapi.json" if settings.SHOW_DOCS else None,
+    docs_url="/docs" if settings.SHOW_DOCS else None,
+    redoc_url="/redoc" if settings.SHOW_DOCS else None,
 )
+
+# Security Headers Middleware (pure ASGI - no BaseHTTPMiddleware buffering issues)
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Set all CORS enabled origins
 app.add_middleware(

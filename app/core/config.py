@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str = "task_manager"
+    ENVIRONMENT: str = "production"
 
     @property
     def DATABASE_URL(self) -> str:
@@ -45,6 +46,10 @@ class Settings(BaseSettings):
             except json.JSONDecodeError:
                 return v
         return v
+
+    @property
+    def SHOW_DOCS(self) -> bool:
+        return self.ENVIRONMENT.lower() != "production"
 
     model_config = SettingsConfigDict(
         env_file=".env",

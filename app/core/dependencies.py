@@ -34,6 +34,7 @@ async def get_current_user(
             token,
             settings.SECRET_KEY,
             algorithms=[settings.ALGORITHM],
+            options={"require_exp": True, "require_sub": True, "verify_aud": False}
         )
 
         user_id: str = payload.get("sub")

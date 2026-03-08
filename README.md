@@ -55,11 +55,27 @@ Detailed technical documentation: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 1. **Start the Stack**:
    ```bash
-   docker-compose up -d
+   docker compose up --build -d
    ```
    
 2. **Access the API**:
    The backend is exposed at [http://localhost:8000](http://localhost:8000).
+
+### Troubleshooting Docker Startup
+
+If `backend` keeps restarting and logs show:
+`password authentication failed for user "postgres"`
+
+Your Postgres volume likely contains older credentials while `.env` has a new `POSTGRES_PASSWORD`.
+
+Use one of these fixes:
+
+1. **Keep existing data**: update the `postgres` user password in the running DB to match `.env`.
+2. **Reset local DB data** (destructive, local only):
+   ```bash
+   docker compose down -v
+   docker compose up --build -d
+   ```
 
 ## 🌐 Live Demo & API Documentation
 
