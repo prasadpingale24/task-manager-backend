@@ -13,9 +13,9 @@ def projectConfig = [
         'POSTGRES_PORT': '5432',
         'ALGORITHM': 'HS256',
         'ACCESS_TOKEN_EXPIRE_MINUTES': '1440',
-        'BACKEND_CORS_ORIGINS': '["http://localhost:3000", "http://72.60.78.85:3000"]',
+        'BACKEND_CORS_ORIGINS': '["https://crewflow.pspworks.cloud", "http://localhost:3000", "http://localhost:5173"]',
         'PROJECT_NAME': 'Team Tasks Manager',
-        'BACKEND_BIND_ADDR': '0.0.0.0',
+        'BACKEND_BIND_ADDR': '127.0.0.1',
         'BACKEND_PORT': '8000',
         'IMAGE_TAG': "${IMAGE_TAG}",
         'ENVIRONMENT': 'production'
@@ -64,8 +64,7 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                // Using 72.60.78.85 as seen in CORS config
-                healthCheck(url: "http://72.60.78.85:8000/health", maxRetries: 12, retryInterval: 10)
+                healthCheck(url: "http://127.0.0.1:8000/health", maxRetries: 12, retryInterval: 10)
             }
         }
     }

@@ -80,8 +80,8 @@ Use one of these fixes:
 ## 🌐 Live Demo & API Documentation
 
 Explore the interactive API documentation and live endpoints:
-- **Swagger UI (Full Documentation)**: [http://72.60.78.85:8000/docs](http://72.60.78.85:8000/docs)
-- **Health Status**: [http://72.60.78.85:8000/health](http://72.60.78.85:8000/health)
+- **Swagger UI (Full Documentation)**: [https://api.crewflow.pspworks.cloud/docs](https://api.crewflow.pspworks.cloud/docs)
+- **Health Status**: [https://api.crewflow.pspworks.cloud/health](https://api.crewflow.pspworks.cloud/health)
 
 *Note: For local development, Swagger is available at `http://localhost:8000/docs`.*
 
