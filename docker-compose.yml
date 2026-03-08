@@ -17,7 +17,8 @@ services:
     image: prasadpingale24/task-manager-backend:latest
     restart: always
     ports:
-      - "${BACKEND_PORT}:8000"
+      - "${BACKEND_BIND_ADDR:-127.0.0.1}:${BACKEND_PORT}:8000"
+
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT}
