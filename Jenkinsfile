@@ -18,7 +18,7 @@ def projectConfig = [
         'BACKEND_BIND_ADDR': '127.0.0.1',
         'BACKEND_PORT': '8000',
         'IMAGE_TAG': "${IMAGE_TAG}",
-        'ENVIRONMENT': 'production'
+        'ENVIRONMENT': 'development'
     ],
     secrets: [
         [id: 'taskManagerBackendSecretKey', var: 'SECRET_KEY'],
